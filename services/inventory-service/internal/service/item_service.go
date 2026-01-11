@@ -1,26 +1,43 @@
-package service
+package services
 
 import (
-	"inventory-service/services/inventory-service/internal/model"
-	"inventory-service/services/inventory-service/internal/repository"
+	"services/inventory-service/internal/model"
+	"services/inventory-service/internal/repository"
+	"services/inventory-service/internal/validator"
 )
-
-func GetAllItems() []model.Item {
-	return repository.GetAllItems()
+type ItemService interface {
+	CreateItem(item model.Item) (model.Item, error)
+	GetItemByID(id int) (model.Item, error)
+	UpdateItem(item model.Item) (model.Item, error)
+	DeleteItem(id int) error
+}
+type itemService struct {
+	repo repository.ItemRepository
+}
+func NewItemService(repo repository.ItemRepository) ItemService {
+	return &itemService{
+		repo: repo,
+	}
 }
 
-func GetItemByID(id int) *model.Item {
-	return repository.GetItemByID(id)
+func (s *itemService) CreateItem(item model.Item) (model.Item, error) {
+	if err := validator.ValidateItem(item); err != nil {
+		return model.Item{}, err
+	}
+	return s.repo.CreateItem(item)
+}
+func (s *itemService) GetItemByID(id int) (model.Item, error) {
+	return s.repo.GetItemByID(id)
 }
 
-func CreateItem(item model.Item) model.Item {
-	return repository.CreateItem(item)
+func (s *itemService) UpdateItem(item model.Item) (model.Item, error) {
+	if err := validator.ValidateItem(item); err != nil {
+		return model.Item{}, err
+	}
+	return s.repo.UpdateItem(item)
 }
 
-func UpdateItem(id int ,item model.Item) *model.Item {
-	return repository.UpdateItem(id, item)
+func (s *itemService) DeleteItem(id int) error {
+	return s.repo.DeleteItem(id)
 }
 
-func DeleteItem(id int) bool {
-	return repository.DeleteItem(id)
-}
