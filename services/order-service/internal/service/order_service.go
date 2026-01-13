@@ -28,7 +28,21 @@ func (s *orderService) CreateOrder(order model.Order) (model.Order, error) {
 		return model.Order{}, err
 	}
 
-	return s.repo.CreateOrder(order)
+	order.Status = "PENDING"
+	saveOrder, err := s.repo.CreateOrder(order)
+
+	if err != nil {
+		return model.Order{}, err 
+	}
+
+	err = s.rabbitProducer.PublishInventoryCheck(saveOrder)
+	if err != nil {
+		return model.Order{}, err 
+	}
+
+	s.kafkaProducer.PublishOrderCreated(saveOrder)
+
+	return saveOrder, nil
 }
 
 func (s *orderService) GetOrderByID(id int) (model.Order, error) {
