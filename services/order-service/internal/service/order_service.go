@@ -28,7 +28,6 @@ func (s *orderService) CreateOrder(order model.Order) (model.Order, error) {
 		return model.Order{}, err
 	}
 
-	
 	return s.repo.CreateOrder(order)
 }
 
